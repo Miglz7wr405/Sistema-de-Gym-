@@ -1,20 +1,14 @@
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/AppShell'
 import { Card, EmptyState, Spinner } from '@/components/ui'
-import { usePlans } from '@/lib/queries'
-import { supabase } from '@/lib/supabase'
+import { Modal } from '@/components/Modal'
+import { usePlans, useActions } from '@/lib/store'
 import { mzn } from '@/lib/format'
 
-export default function AdminPlans() {
-  const qc = useQueryClient()
+export default function Plans() {
   const plans = usePlans(false)
+  const { togglePlan } = useActions()
   const [adding, setAdding] = useState(false)
-
-  async function toggle(id: string, active: boolean) {
-    await supabase.from('plans').update({ active: !active }).eq('id', id)
-    qc.invalidateQueries({ queryKey: ['plans'] })
-  }
 
   return (
     <>
@@ -43,7 +37,7 @@ export default function AdminPlans() {
               </div>
               <button
                 className={`badge ${p.active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}
-                onClick={() => toggle(p.id, p.active)}
+                onClick={() => togglePlan(p.id)}
               >
                 {p.active ? 'Ativo' : 'Inativo'}
               </button>
@@ -58,7 +52,7 @@ export default function AdminPlans() {
 }
 
 function AddPlanModal({ onClose }: { onClose: () => void }) {
-  const qc = useQueryClient()
+  const { addPlan } = useActions()
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [days, setDays] = useState('30')
@@ -67,27 +61,18 @@ function AddPlanModal({ onClose }: { onClose: () => void }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setBusy(true)
-    await supabase.from('plans').insert({
+    await addPlan({
       name,
       price_mzn: Number(price) || 0,
       duration_days: Number(days) || 30,
-      active: true,
     })
-    qc.invalidateQueries({ queryKey: ['plans'] })
     setBusy(false)
     onClose()
   }
 
   return (
-    <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-black/50 p-4 sm:items-center"
-      onClick={onClose}
-    >
-      <form
-        onSubmit={submit}
-        className="w-full max-w-sm space-y-4 rounded-3xl bg-white p-6 dark:bg-slate-900"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
         <h2 className="text-lg font-bold">Novo plano</h2>
         <div>
           <label className="label">Nome</label>
@@ -124,6 +109,6 @@ function AddPlanModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   )
 }

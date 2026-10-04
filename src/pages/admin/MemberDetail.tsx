@@ -1,82 +1,79 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import QRCode from 'qrcode'
 import { PageHeader } from '@/components/AppShell'
-import { Avatar, Card, EmptyState, MembershipBadge, SectionTitle, Spinner } from '@/components/ui'
+import {
+  Avatar,
+  Card,
+  EmptyState,
+  MembershipBadge,
+  SectionTitle,
+  Spinner,
+} from '@/components/ui'
+import { Modal } from '@/components/Modal'
 import { QrImage } from '@/components/QrImage'
-import { supabase } from '@/lib/supabase'
-import { useAttendances, useMyMembership, useMyToken, usePayments, usePlans } from '@/lib/queries'
-import { confirmPayment } from '@/lib/payments'
+import { useMember, usePayments, useAttendances, usePlans, useActions } from '@/lib/store'
 import { dateLabel, dateTimeLabel, mzn } from '@/lib/format'
-import { membershipStateOf, type Plan, type Profile } from '@/lib/types'
-import { useAuth } from '@/lib/auth'
+import { membershipStateOf, type Plan } from '@/lib/types'
 
-export default function AdminMemberDetail() {
+export default function MemberDetail() {
   const { id = '' } = useParams()
-  const qc = useQueryClient()
-  const { profile: admin } = useAuth()
-
-  const profileQ = useQuery({
-    queryKey: ['profile', id],
-    enabled: !!id,
-    queryFn: async (): Promise<Profile | null> => {
-      const { data } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle()
-      return data as Profile | null
-    },
-  })
-  const membership = useMyMembership(id)
+  const member = useMember(id)
   const payments = usePayments(id)
   const attendances = useAttendances(id, 10)
-  const token = useMyToken(id)
   const plans = usePlans(true)
+  const actions = useActions()
 
   const [showPay, setShowPay] = useState(false)
   const [showQr, setShowQr] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState<string | null>(null)
 
-  const member = profileQ.data
-  const state = membershipStateOf(membership.data?.valid_until ?? null)
+  if (member.isLoading) return <Spinner />
+  const m = member.data
+  if (!m) return <EmptyState icon="🤷" text="Membro não encontrado." />
 
-  async function toggleStatus() {
-    if (!member) return
-    const next = member.status === 'active' ? 'suspended' : 'active'
-    await supabase.from('profiles').update({ status: next }).eq('id', member.id)
-    qc.invalidateQueries({ queryKey: ['profile', id] })
-    qc.invalidateQueries({ queryKey: ['members'] })
-  }
+  const state = membershipStateOf(m.valid_until)
 
-  async function onConfirmPlan(plan: Plan) {
-    if (!admin) return
+  async function confirm(plan: Plan) {
     setBusy(true)
     try {
-      await confirmPayment({ memberId: id, plan, createdBy: admin.id })
-      qc.invalidateQueries({ queryKey: ['my-membership', id] })
-      qc.invalidateQueries({ queryKey: ['payments', id] })
-      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-      setShowPay(false)
+      const p = await actions.confirmPayment(id, plan)
+      setDone(`✅ ${plan.name} · ${mzn(plan.price_mzn)} · válido até ${dateLabel(p.valid_until)}`)
     } finally {
       setBusy(false)
     }
   }
 
-  if (profileQ.isLoading) return <Spinner />
-  if (!member) return <EmptyState icon="🤷" text="Membro não encontrado." />
+  async function downloadQr() {
+    const url = await QRCode.toDataURL(`gymcheck:${m!.token}`, { width: 600, margin: 2 })
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `qr-${m!.full_name.replace(/\s+/g, '-').toLowerCase()}.png`
+    a.click()
+  }
 
   return (
     <>
-      <PageHeader title={member.full_name} subtitle={member.email ?? undefined} />
+      <PageHeader title={m.full_name} subtitle={m.phone ?? undefined} />
 
       <Card className="mb-3 flex items-center gap-4">
-        <Avatar name={member.full_name} url={member.photo_url} size={56} />
+        <Avatar name={m.full_name} url={m.photo} size={56} />
         <div className="flex-1">
-          <MembershipBadge state={state} />
+          {m.status === 'suspended' ? (
+            <span className="badge bg-slate-200 text-slate-600 dark:bg-slate-700">
+              Suspenso
+            </span>
+          ) : (
+            <MembershipBadge state={state} />
+          )}
           <p className="mt-1 text-xs text-slate-500">
-            Válida até {dateLabel(membership.data?.valid_until)}
+            Válida até {dateLabel(m.valid_until)}
           </p>
         </div>
       </Card>
 
-      <div className="mb-4 grid grid-cols-2 gap-2">
+      <div className="mb-3 grid grid-cols-2 gap-2">
         <button className="btn-primary" onClick={() => setShowPay(true)}>
           💳 Confirmar pagamento
         </button>
@@ -86,10 +83,10 @@ export default function AdminMemberDetail() {
       </div>
 
       <button
-        className={`btn-ghost mb-4 w-full ${member.status === 'active' ? 'text-rose-600' : 'text-emerald-600'}`}
-        onClick={toggleStatus}
+        className={`btn-ghost mb-4 w-full ${m.status === 'active' ? 'text-rose-600' : 'text-emerald-600'}`}
+        onClick={() => actions.toggleStatus(id)}
       >
-        {member.status === 'active' ? 'Suspender membro' : 'Reativar membro'}
+        {m.status === 'active' ? 'Suspender membro' : 'Reativar membro'}
       </button>
 
       <SectionTitle>Pagamentos</SectionTitle>
@@ -125,65 +122,69 @@ export default function AdminMemberDetail() {
         </div>
       )}
 
-      {/* Modal: escolher plano e confirmar pagamento */}
       {showPay && (
-        <Modal onClose={() => !busy && setShowPay(false)}>
-          <h2 className="mb-3 text-lg font-bold">Confirmar pagamento</h2>
-          {plans.isLoading ? (
-            <Spinner />
-          ) : (
-            <div className="space-y-2">
-              {plans.data!.map((p) => (
-                <button
-                  key={p.id}
-                  disabled={busy}
-                  className="w-full"
-                  onClick={() => onConfirmPlan(p)}
-                >
-                  <Card className="flex items-center justify-between py-3 text-left">
-                    <div>
-                      <p className="font-semibold">{p.name}</p>
-                      <p className="text-xs text-slate-500">{p.duration_days} dias</p>
-                    </div>
-                    <span className="font-bold text-brand">{mzn(p.price_mzn)}</span>
-                  </Card>
-                </button>
-              ))}
+        <Modal
+          onClose={() => {
+            if (!busy) {
+              setShowPay(false)
+              setDone(null)
+            }
+          }}
+        >
+          {done ? (
+            <div className="text-center">
+              <h2 className="text-lg font-bold">Pagamento confirmado</h2>
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">{done}</p>
+              <button
+                className="btn-primary mt-4 w-full"
+                onClick={() => {
+                  setShowPay(false)
+                  setDone(null)
+                }}
+              >
+                Concluir
+              </button>
             </div>
+          ) : (
+            <>
+              <h2 className="mb-3 text-lg font-bold">Confirmar pagamento</h2>
+              {plans.isLoading ? (
+                <Spinner />
+              ) : (
+                <div className="space-y-2">
+                  {plans.data!.map((p) => (
+                    <button key={p.id} disabled={busy} className="w-full" onClick={() => confirm(p)}>
+                      <Card className="flex items-center justify-between py-3 text-left">
+                        <div>
+                          <p className="font-semibold">{p.name}</p>
+                          <p className="text-xs text-slate-500">{p.duration_days} dias</p>
+                        </div>
+                        <span className="font-bold text-brand">{mzn(p.price_mzn)}</span>
+                      </Card>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {busy && <p className="mt-3 text-center text-sm text-slate-500">A processar…</p>}
+            </>
           )}
-          {busy && <p className="mt-3 text-center text-sm text-slate-500">A processar…</p>}
         </Modal>
       )}
 
-      {/* Modal: QR do membro */}
       {showQr && (
         <Modal onClose={() => setShowQr(false)}>
-          <div className="flex flex-col items-center gap-3 py-2">
-            {token.data ? (
-              <QrImage value={`gymcheck:${token.data}`} size={220} />
-            ) : (
-              <Spinner />
-            )}
-            <p className="font-semibold">{member.full_name}</p>
+          <div className="flex flex-col items-center gap-3">
+            <QrImage value={`gymcheck:${m.token}`} size={220} />
+            <p className="font-semibold">{m.full_name}</p>
+            <p className="text-center text-xs text-slate-400">
+              O nome não está dentro do código — só este sistema o reconhece.
+            </p>
+            <button className="btn-primary w-full" onClick={downloadQr}>
+              ⬇️ Descarregar QR (para enviar)
+            </button>
           </div>
         </Modal>
       )}
     </>
-  )
-}
-
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-black/50 p-4 sm:items-center"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-sm rounded-3xl bg-white p-6 dark:bg-slate-900"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
-    </div>
   )
 }

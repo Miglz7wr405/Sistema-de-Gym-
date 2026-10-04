@@ -1,64 +1,32 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { PageHeader } from '@/components/AppShell'
 import { Avatar, Card, EmptyState, SectionTitle, Spinner } from '@/components/ui'
-import { supabase } from '@/lib/supabase'
+import { useMembers, usePayments } from '@/lib/store'
 import { dateLabel, mzn } from '@/lib/format'
-import type { Profile } from '@/lib/types'
+import { membershipStateOf } from '@/lib/types'
 
 type Tab = 'pending' | 'history'
 
-interface PendingRow {
-  member: Profile
-  valid_until: string | null
-}
-
-function usePending() {
-  return useQuery({
-    queryKey: ['payments-pending'],
-    queryFn: async (): Promise<PendingRow[]> => {
-      const today = new Date().toISOString().slice(0, 10)
-      const { data } = await supabase
-        .from('memberships')
-        .select('valid_until, profiles!inner(*)')
-        .eq('profiles.role', 'member')
-      const rows = (data ?? []) as unknown as Array<{
-        valid_until: string | null
-        profiles: Profile
-      }>
-      return rows
-        .filter((r) => !r.valid_until || r.valid_until < today)
-        .map((r) => ({ member: r.profiles, valid_until: r.valid_until }))
-        .sort((a, b) => a.member.full_name.localeCompare(b.member.full_name))
-    },
-  })
-}
-
-function useRecentPayments() {
-  return useQuery({
-    queryKey: ['payments-recent'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('payments')
-        .select('id, amount_mzn, paid_at, receipt_no, member:profiles!payments_member_id_fkey(full_name, photo_url)')
-        .order('paid_at', { ascending: false })
-        .limit(30)
-      return (data ?? []) as unknown as Array<{
-        id: string
-        amount_mzn: number
-        paid_at: string
-        receipt_no: string
-        member: { full_name: string; photo_url: string | null } | null
-      }>
-    },
-  })
-}
-
-export default function AdminPayments() {
+export default function Payments() {
   const [tab, setTab] = useState<Tab>('pending')
-  const pending = usePending()
-  const recent = useRecentPayments()
+  const members = useMembers()
+  const payments = usePayments()
+
+  const pending = useMemo(
+    () =>
+      (members.data ?? []).filter((m) => {
+        const st = membershipStateOf(m.valid_until)
+        return st === 'expired' || st === 'none'
+      }),
+    [members.data],
+  )
+
+  const nameById = useMemo(() => {
+    const map = new Map<string, { name: string; photo: string | null }>()
+    for (const m of members.data ?? []) map.set(m.id, { name: m.full_name, photo: m.photo })
+    return map
+  }, [members.data])
 
   return (
     <>
@@ -82,20 +50,20 @@ export default function AdminPayments() {
       {tab === 'pending' ? (
         <>
           <SectionTitle>Mensalidades expiradas / sem plano</SectionTitle>
-          {pending.isLoading ? (
+          {members.isLoading ? (
             <Spinner />
-          ) : (pending.data?.length ?? 0) === 0 ? (
+          ) : pending.length === 0 ? (
             <EmptyState icon="✅" text="Sem pagamentos pendentes." />
           ) : (
             <div className="space-y-2">
-              {pending.data!.map((r) => (
-                <Link key={r.member.id} to={`/admin/membros/${r.member.id}`}>
+              {pending.map((m) => (
+                <Link key={m.id} to={`/membros/${m.id}`}>
                   <Card className="flex items-center gap-3 py-3">
-                    <Avatar name={r.member.full_name} url={r.member.photo_url} size={40} />
+                    <Avatar name={m.full_name} url={m.photo} size={40} />
                     <div className="flex-1">
-                      <p className="font-semibold">{r.member.full_name}</p>
+                      <p className="font-semibold">{m.full_name}</p>
                       <p className="text-xs text-rose-500">
-                        {r.valid_until ? `Expirou em ${dateLabel(r.valid_until)}` : 'Sem plano'}
+                        {m.valid_until ? `Expirou em ${dateLabel(m.valid_until)}` : 'Sem plano'}
                       </p>
                     </div>
                     <span className="text-xs font-medium text-brand">Confirmar ›</span>
@@ -108,24 +76,27 @@ export default function AdminPayments() {
       ) : (
         <>
           <SectionTitle>Pagamentos recentes</SectionTitle>
-          {recent.isLoading ? (
+          {payments.isLoading ? (
             <Spinner />
-          ) : (recent.data?.length ?? 0) === 0 ? (
+          ) : (payments.data?.length ?? 0) === 0 ? (
             <EmptyState icon="🧾" text="Sem pagamentos registados." />
           ) : (
             <div className="space-y-2">
-              {recent.data!.map((p) => (
-                <Card key={p.id} className="flex items-center gap-3 py-3">
-                  <Avatar name={p.member?.full_name ?? '?'} url={p.member?.photo_url} size={40} />
-                  <div className="flex-1">
-                    <p className="font-semibold">{p.member?.full_name ?? '—'}</p>
-                    <p className="text-xs text-slate-500">
-                      {dateLabel(p.paid_at)} · {p.receipt_no}
-                    </p>
-                  </div>
-                  <span className="font-bold text-emerald-600">{mzn(p.amount_mzn)}</span>
-                </Card>
-              ))}
+              {payments.data!.map((p) => {
+                const info = nameById.get(p.member_id)
+                return (
+                  <Card key={p.id} className="flex items-center gap-3 py-3">
+                    <Avatar name={info?.name ?? '?'} url={info?.photo} size={40} />
+                    <div className="flex-1">
+                      <p className="font-semibold">{info?.name ?? 'Membro removido'}</p>
+                      <p className="text-xs text-slate-500">
+                        {dateLabel(p.paid_at)} · {p.plan_name} · {p.receipt_no}
+                      </p>
+                    </div>
+                    <span className="font-bold text-emerald-600">{mzn(p.amount_mzn)}</span>
+                  </Card>
+                )
+              })}
             </div>
           )}
         </>

@@ -1,29 +1,27 @@
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useState } from 'react'
 import { PageHeader } from '@/components/AppShell'
 import { Avatar, Card, MembershipBadge, Spinner } from '@/components/ui'
 import { QrScanner } from '@/components/QrScanner'
-import { useMembers } from '@/lib/queries'
-import { verifyByMemberId, verifyCheckin } from '@/lib/checkin'
+import { useMembers, useActions } from '@/lib/store'
 import { dateLabel } from '@/lib/format'
 import type { CheckinResponse } from '@/lib/types'
 
 type Mode = 'scan' | 'manual'
 
-export default function AdminAttendance() {
+export default function Attendance() {
   const [mode, setMode] = useState<Mode>('scan')
   const [result, setResult] = useState<CheckinResponse | null>(null)
   const [busy, setBusy] = useState(false)
-  const qc = useQueryClient()
+  const actions = useActions()
 
-  async function handleToken(text: string) {
-    if (busy) return
-    setBusy(true)
-    const res = await verifyCheckin(text)
-    setResult(res)
-    if (res.member) qc.invalidateQueries({ queryKey: ['attendances', res.member.id] })
-    setBusy(false)
-  }
+  const handleToken = useCallback(
+    async (text: string) => {
+      setBusy(true)
+      setResult(await actions.verifyToken(text))
+      setBusy(false)
+    },
+    [actions],
+  )
 
   return (
     <>
@@ -50,52 +48,35 @@ export default function AdminAttendance() {
         <ManualSearch
           onPick={async (id) => {
             setBusy(true)
-            setResult(await verifyByMemberId(id))
+            setResult(await actions.verifyByMemberId(id))
             setBusy(false)
           }}
         />
       )}
 
       {busy && <Spinner />}
-
       {result && <ResultSheet result={result} onClose={() => setResult(null)} />}
     </>
   )
 }
 
-function ResultSheet({
-  result,
-  onClose,
-}: {
-  result: CheckinResponse
-  onClose: () => void
-}) {
+function ResultSheet({ result, onClose }: { result: CheckinResponse; onClose: () => void }) {
   const granted = result.result === 'granted'
   const notFound = result.result === 'not_found'
-
-  const toneBg = notFound
-    ? 'bg-slate-800'
-    : granted
-      ? 'bg-emerald-600'
-      : 'bg-rose-600'
+  const toneBg = notFound ? 'bg-slate-700' : granted ? 'bg-emerald-600' : 'bg-rose-600'
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-30 flex items-end justify-center bg-black/60 p-4 sm:items-center"
       onClick={onClose}
     >
       <div
         className="w-full max-w-sm rounded-3xl bg-white p-6 text-center dark:bg-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Foto em destaque — o porteiro confirma que é mesmo a pessoa */}
         {result.member && (
           <div className="mb-4 flex justify-center">
-            <Avatar
-              name={result.member.full_name}
-              url={result.member.photo_url}
-              size={110}
-            />
+            <Avatar name={result.member.full_name} url={result.member.photo} size={120} />
           </div>
         )}
 
@@ -103,7 +84,7 @@ function ResultSheet({
           <>
             <h2 className="text-xl font-bold">{result.member.full_name}</h2>
             <div className="mt-2 flex justify-center">
-              <MembershipBadge state={result.member.membership_state} />
+              <MembershipBadge state={result.state} />
             </div>
             <p className="mt-1 text-xs text-slate-500">
               Válida até {dateLabel(result.member.valid_until)}
@@ -113,9 +94,7 @@ function ResultSheet({
           <h2 className="text-lg font-semibold text-slate-500">QR não reconhecido</h2>
         )}
 
-        <div
-          className={`mt-5 rounded-2xl ${toneBg} px-4 py-3 text-lg font-bold text-white`}
-        >
+        <div className={`mt-5 rounded-2xl ${toneBg} px-4 py-3 text-lg font-bold text-white`}>
           {notFound ? '❓ ' : granted ? '🟢 ' : '🔴 '}
           {result.message}
         </div>
@@ -145,16 +124,12 @@ function ManualSearch({ onPick }: { onPick: (memberId: string) => void }) {
       ) : (
         <div className="space-y-2">
           {(members.data ?? []).map((m) => (
-            <button
-              key={m.id}
-              className="w-full"
-              onClick={() => onPick(m.id)}
-            >
+            <button key={m.id} className="w-full" onClick={() => onPick(m.id)}>
               <Card className="flex items-center gap-3 py-3 text-left">
-                <Avatar name={m.full_name} url={m.photo_url} size={40} />
+                <Avatar name={m.full_name} url={m.photo} size={40} />
                 <div>
                   <p className="font-semibold">{m.full_name}</p>
-                  <p className="text-xs text-slate-500">{m.email}</p>
+                  <p className="text-xs text-slate-500">{m.phone || '—'}</p>
                 </div>
               </Card>
             </button>
