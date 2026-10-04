@@ -45,10 +45,11 @@ npm run dev
 
 1. Em [vercel.com](https://vercel.com), **Add New → Project** e importa o repositório do GitHub.
 2. A Vercel deteta o Vite (build `npm run build`, saída `dist`).
-3. Em **Environment Variables**, adiciona as duas:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-4. **Deploy.** Fica com um link fixo que abre em qualquer telemóvel/computador.
+3. **Deploy.** Não é preciso configurar nada — as chaves já estão na app.
+
+> As chaves já vêm embutidas (a `anon/publishable` é pública por design e os dados estão
+> protegidos por RLS). Se um dia quiseres sobrepô-las, define `VITE_SUPABASE_URL` e
+> `VITE_SUPABASE_ANON_KEY` nas Environment Variables da Vercel.
 
 ## Stack
 
