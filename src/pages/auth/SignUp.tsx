@@ -28,8 +28,9 @@ export default function SignUp({ onBack }: { onBack: () => void }) {
     if (!fullName.trim()) return
     setBusy(true)
     setError(null)
+    const email2 = email.trim()
     const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: email2,
       password,
       options: {
         data: {
@@ -41,16 +42,25 @@ export default function SignUp({ onBack }: { onBack: () => void }) {
         },
       },
     })
-    setBusy(false)
     if (error) {
+      setBusy(false)
       setError(error.message.includes('already') ? 'Este email já tem conta.' : error.message)
       return
     }
+    // A conta é confirmada automaticamente — entra já.
     if (!data.session) {
-      // Confirmação por email ativada no projeto
-      setDone('Conta criada! Confirma pelo email e depois entra. Falta o ginásio ativar a tua mensalidade.')
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: email2,
+        password,
+      })
+      if (signInErr) {
+        setBusy(false)
+        setDone('Conta criada! Já podes entrar com o teu email e palavra-passe.')
+        return
+      }
     }
-    // Se houver sessão, o AuthProvider encaminha automaticamente.
+    setBusy(false)
+    // Com sessão, o AuthProvider encaminha automaticamente para o painel do membro.
   }
 
   if (done) {
