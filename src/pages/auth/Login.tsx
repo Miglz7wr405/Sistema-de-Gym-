@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Dumbbell, LogIn } from 'lucide-react'
+import { LogIn } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { Logo } from '@/components/Logo'
 
 export default function Login({ onSignUp }: { onSignUp: () => void }) {
   const [email, setEmail] = useState('')
@@ -21,11 +22,8 @@ export default function Login({ onSignUp }: { onSignUp: () => void }) {
     <div className="relative flex min-h-screen flex-col items-center justify-center px-5">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-brand-grad opacity-20 blur-3xl" />
       <div className="relative w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-grad shadow-glow">
-            <Dumbbell className="text-white" size={30} />
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Ginásio</h1>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Logo size={190} className="mb-3 shadow-glow" />
           <p className="mt-1 text-sm text-slate-400">Entra na tua conta</p>
         </div>
 

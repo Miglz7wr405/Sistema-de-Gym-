@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { QrCode, Clock, Flame, CalendarCheck, Hourglass } from 'lucide-react'
+import { QrCode, Clock, Flame, CalendarCheck, Hourglass, ClipboardList, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useAttendances } from '@/lib/store'
 import { Avatar, Card, StatusPill } from '@/components/ui'
+import { Logo } from '@/components/Logo'
 import { dateLabel, fromNow, quoteOfTheDay } from '@/lib/format'
 import { daysLeft, membershipStateOf } from '@/lib/types'
 
@@ -23,21 +24,44 @@ export default function MemberHome() {
   }).length
   const last = (attendances.data ?? []).find((a) => a.result === 'granted')
 
+  const needsInscription =
+    (profile.status === 'pending' && !profile.plan_id) ||
+    (profile.status === 'active' && state === 'expired')
+  const waitingConfirm = profile.status === 'pending' && !!profile.plan_id
+
   return (
     <>
-      <header className="mb-5 flex items-center gap-3">
-        <Avatar name={profile.full_name} url={profile.photo} size={46} />
-        <div className="min-w-0">
-          <p className="text-sm text-slate-400">Olá,</p>
-          <h1 className="truncate text-xl font-bold leading-tight">{firstName} 👋</h1>
+      <header className="mb-5 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar name={profile.full_name} url={profile.photo} size={46} />
+          <div className="min-w-0">
+            <p className="text-sm text-slate-400">Olá,</p>
+            <h1 className="truncate text-xl font-bold leading-tight">{firstName} 👋</h1>
+          </div>
         </div>
+        <Logo size={96} />
       </header>
 
-      {profile.status === 'pending' && (
+      {needsInscription && (
+        <Link to="/inscricao">
+          <Card className="mb-4 flex items-center gap-3 border-brand/30 bg-brand/10">
+            <ClipboardList className="shrink-0 text-brand-400" size={22} />
+            <div className="flex-1">
+              <p className="font-semibold">Fazer inscrição</p>
+              <p className="text-xs text-slate-300">
+                Escolhe o teu plano para ativares o acesso ao ginásio.
+              </p>
+            </div>
+            <ChevronRight className="text-slate-500" size={18} />
+          </Card>
+        </Link>
+      )}
+
+      {waitingConfirm && (
         <Card className="mb-4 flex items-center gap-3 border-amber-500/30 bg-amber-500/10">
           <Hourglass className="shrink-0 text-amber-400" size={20} />
           <p className="text-sm text-amber-200">
-            A tua conta aguarda ativação pelo ginásio. Assim que confirmarem o pagamento, o teu
+            Inscrição enviada. Entrega o pagamento ao ginásio — assim que confirmarem, o teu
             QR Code fica ativo.
           </p>
         </Card>

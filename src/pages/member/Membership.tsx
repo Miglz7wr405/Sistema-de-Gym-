@@ -1,9 +1,11 @@
-import { Receipt } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Receipt, ClipboardList } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { usePayments, usePlan } from '@/lib/store'
 import { PageHeader } from '@/components/AppShell'
 import { Card, EmptyState, SectionTitle, Spinner, StatusPill } from '@/components/ui'
 import { dateLabel, mzn } from '@/lib/format'
+import { membershipStateOf } from '@/lib/types'
 
 export default function MemberMembership() {
   const { profile } = useAuth()
@@ -11,9 +13,26 @@ export default function MemberMembership() {
   const payments = usePayments(profile?.id)
   if (!profile) return null
 
+  const state = membershipStateOf(profile.valid_until)
+  const needsInscription =
+    (profile.status === 'pending' && !profile.plan_id) ||
+    (profile.status === 'active' && state === 'expired')
+
   return (
     <>
       <PageHeader title="A minha mensalidade" />
+
+      {needsInscription && (
+        <Link to="/inscricao">
+          <Card className="mb-4 flex items-center gap-3 border-brand/30 bg-brand/10">
+            <ClipboardList className="shrink-0 text-brand-400" size={22} />
+            <div className="flex-1">
+              <p className="font-semibold">Fazer inscrição</p>
+              <p className="text-xs text-slate-300">Escolhe o teu plano para ativares o acesso.</p>
+            </div>
+          </Card>
+        </Link>
+      )}
 
       <Card className="mb-4 space-y-3">
         <Row label="Plano" value={plan.data?.name ?? '—'} />

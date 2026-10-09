@@ -21,6 +21,7 @@ import MemberMembership from '@/pages/member/Membership'
 import MemberQR from '@/pages/member/QRCode'
 import MemberAttendance from '@/pages/member/Attendance'
 import MemberClasses from '@/pages/member/Classes'
+import MemberInscription from '@/pages/member/Inscription'
 import MemberProfile from '@/pages/member/Profile'
 
 export default function App() {
@@ -73,6 +74,7 @@ export default function App() {
           <>
             <Route path="/" element={<MemberHome />} />
             <Route path="/aulas" element={<MemberClasses />} />
+            <Route path="/inscricao" element={<MemberInscription />} />
             <Route path="/mensalidade" element={<MemberMembership />} />
             <Route path="/qr" element={<MemberQR />} />
             <Route path="/presencas" element={<MemberAttendance />} />

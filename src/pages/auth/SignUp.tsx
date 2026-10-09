@@ -3,6 +3,7 @@ import { ArrowLeft, Camera, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { fileToResizedDataUrl } from '@/lib/image'
 import { Avatar } from '@/components/ui'
+import { Logo } from '@/components/Logo'
 
 export default function SignUp({ onBack }: { onBack: () => void }) {
   const [fullName, setFullName] = useState('')
@@ -74,6 +75,7 @@ export default function SignUp({ onBack }: { onBack: () => void }) {
       <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-sm text-slate-400">
         <ArrowLeft size={16} /> Voltar
       </button>
+      <Logo size={150} className="mb-4" />
       <h1 className="text-2xl font-bold">Criar conta de membro</h1>
       <p className="mb-6 mt-1 text-sm text-slate-400">
         Preenche os teus dados. A tua conta fica pendente até o ginásio confirmar o pagamento.

@@ -15,9 +15,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Ginásio — Gestão',
-        short_name: 'Ginásio',
-        description: 'Gestão de membros, pagamentos e presenças do ginásio.',
+        name: 'Olympus — Ginásio',
+        short_name: 'Olympus',
+        description: 'Gestão de membros, pagamentos e presenças do ginásio Olympus.',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',

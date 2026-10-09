@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/AppShell'
 import { Avatar, Card, EmptyState, MemberMeta, Spinner, StatusPill } from '@/components/ui'
 import { useMembers } from '@/lib/store'
 
-type Tab = 'all' | 'pending'
+type Tab = 'all' | 'pending' | 'active'
 
 export default function AdminMembers() {
   const [search, setSearch] = useState('')
@@ -14,7 +14,9 @@ export default function AdminMembers() {
 
   const list = useMemo(() => {
     const all = members.data ?? []
-    return tab === 'pending' ? all.filter((m) => m.status === 'pending') : all
+    if (tab === 'pending') return all.filter((m) => m.status === 'pending')
+    if (tab === 'active') return all.filter((m) => m.status === 'active')
+    return all
   }, [members.data, tab])
 
   const pendingCount = (members.data ?? []).filter((m) => m.status === 'pending').length
@@ -29,6 +31,9 @@ export default function AdminMembers() {
         </button>
         <button className={tab === 'pending' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('pending')}>
           Pendentes{pendingCount > 0 ? ` (${pendingCount})` : ''}
+        </button>
+        <button className={tab === 'active' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('active')}>
+          Ativos
         </button>
       </div>
 

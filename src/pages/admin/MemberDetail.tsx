@@ -40,10 +40,10 @@ export default function AdminMemberDetail() {
 
   const age = ageFrom(m.birth_date)
 
-  async function confirm(plan: Plan) {
+  async function confirm(plan: Plan, durationDays: number) {
     setBusy(true)
     try {
-      const p = await actions.confirmPayment(id, plan)
+      const p = await actions.confirmPayment(id, plan, { durationDays })
       setDone(`Pagamento confirmado: ${plan.name} · ${mzn(plan.price_mzn)} · válido até ${dateLabel(p.valid_until)}`)
     } finally {
       setBusy(false)
@@ -138,21 +138,7 @@ export default function AdminMemberDetail() {
           ) : plans.isLoading ? (
             <Spinner />
           ) : (
-            <div className="space-y-2">
-              <p className="mb-1 text-sm text-slate-400">Escolhe o plano pago:</p>
-              {plans.data!.map((p) => (
-                <button key={p.id} disabled={busy} className="w-full" onClick={() => confirm(p)}>
-                  <Card className="flex items-center justify-between py-3 text-left">
-                    <div>
-                      <p className="font-semibold">{p.name}</p>
-                      <p className="text-xs text-slate-400">{p.duration_days} dias</p>
-                    </div>
-                    <span className="font-bold text-brand-400">{mzn(p.price_mzn)}</span>
-                  </Card>
-                </button>
-              ))}
-              {busy && <p className="pt-2 text-center text-sm text-slate-400">A processar…</p>}
-            </div>
+            <PayForm plans={plans.data!} requestedPlanId={m.plan_id} busy={busy} onConfirm={confirm} />
           )}
         </Modal>
       )}
@@ -169,6 +155,78 @@ export default function AdminMemberDetail() {
         </Modal>
       )}
     </>
+  )
+}
+
+function PayForm({
+  plans,
+  requestedPlanId,
+  busy,
+  onConfirm,
+}: {
+  plans: Plan[]
+  requestedPlanId: string | null
+  busy: boolean
+  onConfirm: (plan: Plan, days: number) => void
+}) {
+  const initial = plans.find((p) => p.id === requestedPlanId) ?? plans[0]
+  const [selectedId, setSelectedId] = useState(initial?.id ?? '')
+  const selected = plans.find((p) => p.id === selectedId) ?? initial
+  const [days, setDays] = useState(String(initial?.duration_days ?? 30))
+
+  function pick(p: Plan) {
+    setSelectedId(p.id)
+    setDays(String(p.duration_days))
+  }
+
+  if (!selected) return <p className="text-sm text-slate-400">Cria um plano primeiro.</p>
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-400">Plano pago pelo membro:</p>
+      <div className="space-y-2">
+        {plans.map((p) => (
+          <button key={p.id} type="button" className="w-full" onClick={() => pick(p)}>
+            <div
+              className={`flex items-center justify-between rounded-2xl border p-3 text-left transition ${
+                p.id === selectedId ? 'border-brand bg-brand/10' : 'border-white/10 bg-white/5'
+              }`}
+            >
+              <div>
+                <p className="font-semibold">
+                  {p.name}
+                  {p.id === requestedPlanId && (
+                    <span className="ml-2 rounded-full bg-lime/15 px-2 py-0.5 text-[10px] font-semibold text-lime-400">
+                      pedido
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-slate-400">{p.duration_days} dias</p>
+              </div>
+              <span className="font-bold text-brand-400">{mzn(p.price_mzn)}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <label className="label">Duração (dias) — podes ajustar</label>
+        <input
+          type="number"
+          className="input"
+          value={days}
+          onChange={(e) => setDays(e.target.value)}
+        />
+      </div>
+
+      <button
+        className="btn-primary w-full"
+        disabled={busy}
+        onClick={() => onConfirm(selected, Number(days) || selected.duration_days)}
+      >
+        {busy ? 'A processar…' : `Confirmar ${mzn(selected.price_mzn)}`}
+      </button>
+    </div>
   )
 }
 

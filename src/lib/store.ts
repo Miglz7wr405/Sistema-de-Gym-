@@ -235,7 +235,13 @@ export function useActions() {
     },
 
     /** Confirma pagamento: regista, estende validade e ATIVA a conta. */
-    async confirmPayment(memberId: string, plan: Plan, method = 'Dinheiro'): Promise<Payment> {
+    async confirmPayment(
+      memberId: string,
+      plan: Plan,
+      opts: { durationDays?: number; method?: string } = {},
+    ): Promise<Payment> {
+      const method = opts.method ?? 'Dinheiro'
+      const days = opts.durationDays && opts.durationDays > 0 ? opts.durationDays : plan.duration_days
       const { data: member, error: mErr } = await supabase
         .from('profiles')
         .select('*')
@@ -244,7 +250,7 @@ export function useActions() {
       if (mErr) throw mErr
       const today = todayStr()
       const base = member.valid_until && member.valid_until > today ? member.valid_until : today
-      const validUntil = addDays(base, plan.duration_days)
+      const validUntil = addDays(base, days)
 
       const { data: payment, error: pErr } = await supabase
         .from('member_payments')
@@ -270,6 +276,13 @@ export function useActions() {
 
     async updateOwnProfile(id: string, patch: Partial<Profile>): Promise<void> {
       const { error } = await supabase.from('profiles').update(patch).eq('id', id)
+      if (error) throw error
+      invalidate()
+    },
+
+    /** Inscrição: o membro escolhe o plano pretendido (fica pendente até o admin confirmar). */
+    async requestPlan(memberId: string, planId: string): Promise<void> {
+      const { error } = await supabase.from('profiles').update({ plan_id: planId }).eq('id', memberId)
       if (error) throw error
       invalidate()
     },
