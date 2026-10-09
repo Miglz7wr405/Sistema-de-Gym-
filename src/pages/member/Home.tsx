@@ -44,7 +44,10 @@ export default function MemberHome() {
       )}
 
       {/* Cartão de membro */}
-      <div className="relative mb-4 overflow-hidden rounded-3xl border border-white/10 bg-brand-grad p-5 shadow-glow">
+      <Link
+        to="/mensalidade"
+        className="relative mb-4 block overflow-hidden rounded-3xl border border-white/10 bg-brand-grad p-5 shadow-glow"
+      >
         <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="relative">
           <div className="flex items-center justify-between">
@@ -69,7 +72,7 @@ export default function MemberHome() {
             )}
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* Frase do dia */}
       <Card className="mb-4 flex items-start gap-3">

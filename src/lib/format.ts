@@ -26,6 +26,16 @@ export function dateTimeLabel(iso: string | null | undefined): string {
   }
 }
 
+export function classWhen(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  try {
+    const s = format(new Date(iso), "EEEE '—' HH:mm", { locale: pt })
+    return s.charAt(0).toUpperCase() + s.slice(1)
+  } catch {
+    return '—'
+  }
+}
+
 export function fromNow(iso: string | null | undefined): string {
   if (!iso) return '—'
   try {

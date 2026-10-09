@@ -4,8 +4,12 @@ import { PageHeader } from '@/components/AppShell'
 import { Card } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
 
+const LINKS = [
+  { icon: CalendarDays, label: 'Aulas', to: '/aulas' },
+  { icon: Tag, label: 'Planos', to: '/planos' },
+]
+
 const SOON = [
-  { icon: CalendarDays, label: 'Aulas' },
   { icon: Dumbbell, label: 'Eventos' },
   { icon: BarChart3, label: 'Finanças' },
   { icon: Bell, label: 'Notificações' },
@@ -18,15 +22,22 @@ export default function AdminMore() {
     <>
       <PageHeader title="Mais" subtitle={profile?.email ?? undefined} />
 
-      <Link to="/planos">
-        <Card className="mb-4 flex items-center gap-3 py-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/15 text-brand-400">
-            <Tag size={18} />
-          </div>
-          <span className="flex-1 font-medium">Planos</span>
-          <ChevronRight size={18} className="text-slate-600" />
-        </Card>
-      </Link>
+      <div className="mb-4 space-y-2">
+        {LINKS.map((item) => {
+          const Icon = item.icon
+          return (
+            <Link key={item.label} to={item.to}>
+              <Card className="flex items-center gap-3 py-3.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/15 text-brand-400">
+                  <Icon size={18} />
+                </div>
+                <span className="flex-1 font-medium">{item.label}</span>
+                <ChevronRight size={18} className="text-slate-600" />
+              </Card>
+            </Link>
+          )
+        })}
+      </div>
 
       <Card className="mb-4 flex items-center gap-3 border-lime/20 bg-lime/5 py-3">
         <Cloud size={18} className="shrink-0 text-lime-400" />

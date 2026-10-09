@@ -48,6 +48,25 @@ export interface Attendance {
   result: CheckinResult
 }
 
+export interface GymClass {
+  id: string
+  title: string
+  instructor: string
+  starts_at: string
+  capacity: number
+  enrolled_count: number
+  active: boolean
+  created_at: string
+}
+
+export interface ClassEnrollment {
+  id: string
+  class_id: string
+  member_id: string
+  status: 'enrolled' | 'waitlist'
+  created_at: string
+}
+
 export interface CheckinResponse {
   result: CheckinResult
   member?: Profile

@@ -9,6 +9,7 @@ import {
   Home,
   QrCode,
   CalendarCheck,
+  CalendarDays,
   User,
   type LucideIcon,
 } from 'lucide-react'
@@ -30,7 +31,7 @@ const ADMIN_NAV: NavItem[] = [
 
 const MEMBER_NAV: NavItem[] = [
   { to: '/', label: 'Início', icon: Home },
-  { to: '/mensalidade', label: 'Plano', icon: CreditCard },
+  { to: '/aulas', label: 'Aulas', icon: CalendarDays },
   { to: '/qr', label: 'QR Code', icon: QrCode },
   { to: '/presencas', label: 'Entradas', icon: CalendarCheck },
   { to: '/perfil', label: 'Perfil', icon: User },

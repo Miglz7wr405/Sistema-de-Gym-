@@ -4,6 +4,8 @@ import {
   membershipStateOf,
   type Attendance,
   type CheckinResponse,
+  type ClassEnrollment,
+  type GymClass,
   type Payment,
   type Plan,
   type Profile,
@@ -145,6 +147,37 @@ export function useDashboard() {
   })
 }
 
+// --------------------------------------------------------------- Aulas
+export function useClasses(upcomingOnly = true) {
+  return useQuery({
+    queryKey: ['classes', upcomingOnly],
+    queryFn: async (): Promise<GymClass[]> => {
+      let q = supabase.from('classes').select('*').order('starts_at')
+      if (upcomingOnly) {
+        q = q.eq('active', true).gte('starts_at', new Date(Date.now() - 2 * 3600_000).toISOString())
+      }
+      const { data, error } = await q
+      if (error) throw error
+      return (data ?? []) as GymClass[]
+    },
+  })
+}
+
+export function useMyEnrollments(memberId: string | undefined) {
+  return useQuery({
+    queryKey: ['enrollments', memberId],
+    enabled: !!memberId,
+    queryFn: async (): Promise<ClassEnrollment[]> => {
+      const { data, error } = await supabase
+        .from('class_enrollments')
+        .select('*')
+        .eq('member_id', memberId!)
+      if (error) throw error
+      return (data ?? []) as ClassEnrollment[]
+    },
+  })
+}
+
 // --------------------------------------------------------------- Check-in
 async function registerCheckin(member: Profile): Promise<CheckinResponse> {
   const state = membershipStateOf(member.valid_until)
@@ -238,6 +271,42 @@ export function useActions() {
     async updateOwnProfile(id: string, patch: Partial<Profile>): Promise<void> {
       const { error } = await supabase.from('profiles').update(patch).eq('id', id)
       if (error) throw error
+      invalidate()
+    },
+
+    async createClass(data: {
+      title: string
+      instructor: string
+      starts_at: string
+      capacity: number
+    }): Promise<void> {
+      const { error } = await supabase.from('classes').insert(data)
+      if (error) throw error
+      invalidate()
+    },
+
+    async cancelClass(id: string): Promise<void> {
+      await supabase.from('classes').update({ active: false }).eq('id', id)
+      invalidate()
+    },
+
+    /** Inscreve o membro; se a aula estiver cheia, entra em lista de espera. */
+    async joinClass(cls: GymClass, memberId: string): Promise<'enrolled' | 'waitlist'> {
+      const status = cls.enrolled_count >= cls.capacity ? 'waitlist' : 'enrolled'
+      const { error } = await supabase
+        .from('class_enrollments')
+        .insert({ class_id: cls.id, member_id: memberId, status })
+      if (error) throw error
+      invalidate()
+      return status
+    },
+
+    async leaveClass(classId: string, memberId: string): Promise<void> {
+      await supabase
+        .from('class_enrollments')
+        .delete()
+        .eq('class_id', classId)
+        .eq('member_id', memberId)
       invalidate()
     },
 

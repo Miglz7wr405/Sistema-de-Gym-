@@ -13,12 +13,14 @@ import AdminMemberDetail from '@/pages/admin/MemberDetail'
 import AdminPayments from '@/pages/admin/Payments'
 import AdminAttendance from '@/pages/admin/Attendance'
 import AdminPlans from '@/pages/admin/Plans'
+import AdminClasses from '@/pages/admin/Classes'
 import AdminMore from '@/pages/admin/More'
 
 import MemberHome from '@/pages/member/Home'
 import MemberMembership from '@/pages/member/Membership'
 import MemberQR from '@/pages/member/QRCode'
 import MemberAttendance from '@/pages/member/Attendance'
+import MemberClasses from '@/pages/member/Classes'
 import MemberProfile from '@/pages/member/Profile'
 
 export default function App() {
@@ -62,6 +64,7 @@ export default function App() {
             <Route path="/membros/:id" element={<AdminMemberDetail />} />
             <Route path="/pagamentos" element={<AdminPayments />} />
             <Route path="/presencas" element={<AdminAttendance />} />
+            <Route path="/aulas" element={<AdminClasses />} />
             <Route path="/planos" element={<AdminPlans />} />
             <Route path="/mais" element={<AdminMore />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -69,6 +72,7 @@ export default function App() {
         ) : (
           <>
             <Route path="/" element={<MemberHome />} />
+            <Route path="/aulas" element={<MemberClasses />} />
             <Route path="/mensalidade" element={<MemberMembership />} />
             <Route path="/qr" element={<MemberQR />} />
             <Route path="/presencas" element={<MemberAttendance />} />
