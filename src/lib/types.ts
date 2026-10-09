@@ -1,6 +1,23 @@
+export type Role = 'admin' | 'member'
+export type AccountStatus = 'pending' | 'active' | 'suspended'
 export type MembershipState = 'active' | 'expiring' | 'expired' | 'none'
-export type MemberStatus = 'active' | 'suspended'
-export type CheckinResult = 'granted' | 'expired' | 'not_found' | 'suspended'
+export type CheckinResult = 'granted' | 'expired' | 'suspended' | 'pending' | 'not_found'
+
+export interface Profile {
+  id: string
+  role: Role
+  full_name: string
+  email: string | null
+  phone: string | null
+  birth_date: string | null
+  gender: string | null
+  photo: string | null
+  token: string
+  status: AccountStatus
+  plan_id: string | null
+  valid_until: string | null
+  created_at: string
+}
 
 export interface Plan {
   id: string
@@ -8,18 +25,6 @@ export interface Plan {
   price_mzn: number
   duration_days: number
   active: boolean
-  created_at: string
-}
-
-export interface Member {
-  id: string
-  full_name: string
-  phone: string | null
-  photo: string | null // data URL (guardado localmente)
-  token: string // conteúdo do QR (opaco) — nunca contém o nome
-  status: MemberStatus
-  plan_id: string | null
-  valid_until: string | null // ISO date (yyyy-mm-dd)
   created_at: string
 }
 
@@ -31,27 +36,21 @@ export interface Payment {
   amount_mzn: number
   method: string
   receipt_no: string
-  paid_at: string // ISO datetime
+  paid_at: string
   valid_until: string | null
 }
 
 export interface Attendance {
   id: string
-  member_id: string
-  member_name: string // snapshot (para histórico mesmo se o membro mudar)
-  checked_in_at: string // ISO datetime
+  member_id: string | null
+  member_name: string
+  checked_in_at: string
   result: CheckinResult
 }
 
-export interface Settings {
-  id: 'app'
-  gym_name: string
-}
-
-/** Resposta da verificação de entrada (o que o porteiro vê ao ler o QR). */
 export interface CheckinResponse {
   result: CheckinResult
-  member?: Member
+  member?: Profile
   state: MembershipState
   message: string
 }
@@ -64,4 +63,22 @@ export function membershipStateOf(validUntil: string | null): MembershipState {
   if (msLeft < 0) return 'expired'
   if (msLeft / 86_400_000 <= 3) return 'expiring'
   return 'active'
+}
+
+/** Dias que faltam até expirar (negativo se já expirou). */
+export function daysLeft(validUntil: string | null): number | null {
+  if (!validUntil) return null
+  const end = new Date(validUntil + 'T23:59:59')
+  return Math.ceil((end.getTime() - Date.now()) / 86_400_000)
+}
+
+export function ageFrom(birth: string | null): number | null {
+  if (!birth) return null
+  const b = new Date(birth)
+  if (isNaN(b.getTime())) return null
+  const now = new Date()
+  let age = now.getFullYear() - b.getFullYear()
+  const m = now.getMonth() - b.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--
+  return age
 }

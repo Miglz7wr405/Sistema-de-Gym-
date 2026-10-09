@@ -1,53 +1,60 @@
 import { Link } from 'react-router-dom'
+import { Tag, CalendarDays, Dumbbell, BarChart3, Bell, LogOut, ChevronRight, Cloud } from 'lucide-react'
 import { PageHeader } from '@/components/AppShell'
 import { Card } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
 
 const SOON = [
-  { icon: '🎉', label: 'Eventos' },
-  { icon: '👨‍🏫', label: 'Instrutores' },
-  { icon: '📅', label: 'Aulas' },
-  { icon: '📈', label: 'Finanças' },
-  { icon: '🔔', label: 'Notificações' },
+  { icon: CalendarDays, label: 'Aulas' },
+  { icon: Dumbbell, label: 'Eventos' },
+  { icon: BarChart3, label: 'Finanças' },
+  { icon: Bell, label: 'Notificações' },
 ]
 
-export default function More() {
-  const { session, signOut } = useAuth()
+export default function AdminMore() {
+  const { profile, signOut } = useAuth()
 
   return (
     <>
-      <PageHeader title="Mais" subtitle={session?.user.email ?? undefined} />
+      <PageHeader title="Mais" subtitle={profile?.email ?? undefined} />
 
       <Link to="/planos">
-        <Card className="mb-3 flex items-center gap-3 py-3.5">
-          <span className="text-xl">🏷️</span>
+        <Card className="mb-4 flex items-center gap-3 py-3.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/15 text-brand-400">
+            <Tag size={18} />
+          </div>
           <span className="flex-1 font-medium">Planos</span>
-          <span className="text-slate-300">›</span>
+          <ChevronRight size={18} className="text-slate-600" />
         </Card>
       </Link>
 
-      <Card className="mb-4 border-emerald-200 bg-emerald-50 py-3 text-xs text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
-        ☁️ Os teus dados estão guardados online e em segurança. Entra em qualquer
-        aparelho com a tua conta e vês tudo igual.
+      <Card className="mb-4 flex items-center gap-3 border-lime/20 bg-lime/5 py-3">
+        <Cloud size={18} className="shrink-0 text-lime-400" />
+        <p className="text-xs text-lime-200/90">
+          Dados online e seguros. Os membros registam-se na app e tu ativas aqui.
+        </p>
       </Card>
 
-      <p className="mb-2 mt-5 text-sm font-semibold text-slate-500">Em breve</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Em breve</p>
       <div className="space-y-2">
-        {SOON.map((item) => (
-          <div key={item.label} className="opacity-70">
-            <Card className="flex items-center gap-3 py-3.5">
-              <span className="text-xl">{item.icon}</span>
-              <span className="flex-1 font-medium">{item.label}</span>
-              <span className="badge bg-slate-100 text-slate-400 dark:bg-slate-800">
-                em breve
-              </span>
-            </Card>
-          </div>
-        ))}
+        {SOON.map((item) => {
+          const Icon = item.icon
+          return (
+            <div key={item.label} className="opacity-70">
+              <Card className="flex items-center gap-3 py-3.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5 text-slate-400">
+                  <Icon size={18} />
+                </div>
+                <span className="flex-1 font-medium">{item.label}</span>
+                <span className="badge bg-white/5 text-slate-500">em breve</span>
+              </Card>
+            </div>
+          )
+        })}
       </div>
 
-      <button onClick={signOut} className="btn-ghost mt-5 w-full text-rose-600">
-        Terminar sessão
+      <button onClick={signOut} className="btn-ghost mt-5 w-full text-rose-400">
+        <LogOut size={18} /> Terminar sessão
       </button>
     </>
   )

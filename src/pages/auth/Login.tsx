@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Dumbbell, LogIn } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export default function Login() {
+export default function Login({ onSignUp }: { onSignUp: () => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -17,14 +18,15 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-5">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-screen flex-col items-center justify-center px-5">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-brand-grad opacity-20 blur-3xl" />
+      <div className="relative w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand text-2xl text-white">
-            🏋️
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-grad shadow-glow">
+            <Dumbbell className="text-white" size={30} />
           </div>
-          <h1 className="text-2xl font-bold">Ginásio</h1>
-          <p className="text-sm text-slate-500">Entra para gerir o teu ginásio</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Ginásio</h1>
+          <p className="mt-1 text-sm text-slate-400">Entra na tua conta</p>
         </div>
 
         <form onSubmit={onSubmit} className="card space-y-4">
@@ -52,11 +54,19 @@ export default function Login() {
               placeholder="••••••••"
             />
           </div>
-          {error && <p className="text-sm text-rose-600">{error}</p>}
+          {error && <p className="text-sm text-rose-400">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
-            {busy ? 'A entrar…' : 'Entrar'}
+            <LogIn size={18} /> {busy ? 'A entrar…' : 'Entrar'}
           </button>
         </form>
+
+        <button
+          onClick={onSignUp}
+          className="mt-5 w-full text-center text-sm text-slate-400"
+        >
+          Novo no ginásio?{' '}
+          <span className="font-semibold text-brand-400">Criar conta de membro</span>
+        </button>
       </div>
     </div>
   )

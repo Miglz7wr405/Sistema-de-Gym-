@@ -1,57 +1,56 @@
 # 🏋️ Sistema de Gestão para Mini Ginásio
 
-Sistema simples e moderno para gerir um mini ginásio: membros, planos, pagamentos e
-controlo de entradas por **QR Code**. Funciona no telemóvel e no computador, instala-se
-como **app (PWA)** e os dados ficam **online e partilhados** (vários aparelhos veem o mesmo).
+App web responsiva e instalável (PWA) com **visual escuro premium** e **dois painéis**:
+**Administrador** (gere tudo) e **Membro** (vê o seu). Dados online e partilhados no
+**Supabase**. Interface em português, valores em Metical (MT).
 
-## Online e partilhado (Supabase)
+## Dois perfis
 
-- A base de dados está no **Supabase** (PostgreSQL na nuvem) — já criada e configurada.
-- A app liga-se por 2 variáveis de ambiente (`VITE_SUPABASE_URL` e
-  `VITE_SUPABASE_ANON_KEY`). A chave é a `publishable/anon`, própria para o cliente; o
-  acesso aos dados é protegido por *Row Level Security* — só quem tem conta entra.
-- Entra em qualquer aparelho com a tua conta e vês tudo igual, em tempo real.
-
-### Conta de administrador
-- **Email:** `miguelzinhonordez@gmail.com`
-- **Palavra-passe:** `Ginasio2026` (muda quando quiseres)
+- **Membro:** regista-se sozinho na app (nome, email, palavra-passe, **data de nascimento,
+  telefone, foto, género**). A conta fica **pendente** até o ginásio ativar. Depois tem o
+  seu painel: **cartão de membro** com estado e dias até expirar, mensalidade + histórico,
+  **QR Code** (ativo só quando a conta está ativa), entradas e perfil editável.
+- **Administrador:** dashboard com indicadores e alertas; **Membros** (lista, pesquisa,
+  separador de **pendentes**, ver dados/idade, **confirmar pagamento → ativa** a conta e
+  estende a validade, suspender/reativar, ver/descarregar QR); **Pagamentos** (a tratar +
+  histórico); **Entradas** (scanner de QR + pesquisa por nome); **Planos**.
 
 ## 🔐 QR Code seguro (anti-partilha)
 
-1. **O QR não contém o nome** nem dados pessoais — só um **código aleatório**
-   (`gymcheck:<uuid>`). Um leitor qualquer não revela nada útil.
-2. **Verificação por foto:** ao ler o QR, o ecrã mostra a **FOTO + nome + estado da
-   mensalidade**. O porteiro confirma que a pessoa é mesmo o membro.
-   🟢 Entrada autorizada / 🔴 expirada / membro suspenso.
-3. **Registo automático** de cada leitura no histórico de presenças.
+1. O QR só contém um **código aleatório** (`gymcheck:<uuid>`) — sem nome nem dados pessoais.
+2. A validação é feita no servidor (Supabase) e **só o admin** a executa.
+3. Ao ler, o admin vê **foto grande + nome + estado** para confirmar que é mesmo o membro.
+   🟢 Autorizado · 🔴 Expirado · Suspenso · Pendente. Cada leitura fica registada.
 
-## O que faz
+## Login do administrador
 
-- **Início:** membros ativos, recebido no mês, pagamentos pendentes, presenças de hoje e alertas.
-- **Membros:** adicionar (com foto), pesquisar, detalhe, suspender/reativar.
-- **Pagamentos:** confirmar (escolher plano → estende validade + recibo), pendentes, histórico.
-- **Presenças:** ler QR pela câmara ou procurar pelo nome; ecrã de verificação com foto.
-- **Planos:** Mensal/Trimestral/Semestral/Anual (ou criar outros), em MT.
+- **Email:** `miguelzinhonordez@gmail.com`
+- **Palavra-passe:** `Ginasio2026`
 
-## Correr localmente
+## Tecnologia
+
+Vite · React · TypeScript · Tailwind (tema escuro) · lucide-react · React Query ·
+Supabase (Postgres + Auth + RLS) · QR `qrcode` + `@zxing/browser` · PWA `vite-plugin-pwa`.
+
+## Base de dados (Supabase)
+
+- `profiles` (membros e admins; papel, estado, token do QR, plano, validade, dados pessoais)
+- `plans`, `member_payments`, `member_attendances`
+- **RLS:** cada membro só acede aos seus dados; o admin acede a tudo. Perfil criado
+  automaticamente no registo (trigger). A conta do admin já está definida.
+
+## Correr / publicar
 
 ```bash
 npm install
-cp .env.example .env     # preenche com as chaves do teu projeto Supabase
-npm run dev
+npm run dev          # desenvolvimento
+npm run build        # versão final (dist/)
 ```
 
-## Publicar na Vercel
+**Vercel:** importa o repositório e faz **Deploy** — as chaves (públicas, protegidas por
+RLS) já estão embutidas; não é preciso configurar nada. Opcional: definir
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` nas Environment Variables para as sobrepor.
 
-1. Em [vercel.com](https://vercel.com), **Add New → Project** e importa o repositório do GitHub.
-2. A Vercel deteta o Vite (build `npm run build`, saída `dist`).
-3. **Deploy.** Não é preciso configurar nada — as chaves já estão na app.
-
-> As chaves já vêm embutidas (a `anon/publishable` é pública por design e os dados estão
-> protegidos por RLS). Se um dia quiseres sobrepô-las, define `VITE_SUPABASE_URL` e
-> `VITE_SUPABASE_ANON_KEY` nas Environment Variables da Vercel.
-
-## Stack
-
-Vite · React · TypeScript · Tailwind CSS · React Router · React Query ·
-Supabase (Postgres + Auth + RLS) · QR: `qrcode` + `@zxing/browser` · PWA: `vite-plugin-pwa`.
+> Nota: o auto-registo depende da confirmação de email do Supabase. Se o projeto tiver a
+> confirmação ativada, o membro confirma pelo email antes de entrar; podes desativar essa
+> opção no painel do Supabase (Authentication → Providers → Email) para entrar logo.

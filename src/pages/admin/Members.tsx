@@ -1,141 +1,71 @@
-import { useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Search, Users, ChevronRight } from 'lucide-react'
 import { PageHeader } from '@/components/AppShell'
-import { Avatar, Card, EmptyState, MembershipBadge, Spinner } from '@/components/ui'
-import { Modal } from '@/components/Modal'
-import { useMembers, useActions } from '@/lib/store'
-import { fileToResizedDataUrl } from '@/lib/image'
-import { membershipStateOf } from '@/lib/types'
+import { Avatar, Card, EmptyState, MemberMeta, Spinner, StatusPill } from '@/components/ui'
+import { useMembers } from '@/lib/store'
 
-export default function Members() {
+type Tab = 'all' | 'pending'
+
+export default function AdminMembers() {
   const [search, setSearch] = useState('')
-  const [adding, setAdding] = useState(false)
+  const [tab, setTab] = useState<Tab>('all')
   const members = useMembers(search)
+
+  const list = useMemo(() => {
+    const all = members.data ?? []
+    return tab === 'pending' ? all.filter((m) => m.status === 'pending') : all
+  }, [members.data, tab])
+
+  const pendingCount = (members.data ?? []).filter((m) => m.status === 'pending').length
 
   return (
     <>
-      <PageHeader
-        title="Membros"
-        action={
-          <button className="btn-primary" onClick={() => setAdding(true)}>
-            + Adicionar
-          </button>
-        }
-      />
+      <PageHeader title="Membros" subtitle={`${members.data?.length ?? 0} no total`} />
 
-      <input
-        className="input mb-3"
-        placeholder="Pesquisar por nome ou telefone…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <div className="mb-3 flex gap-2">
+        <button className={tab === 'all' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('all')}>
+          Todos
+        </button>
+        <button className={tab === 'pending' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('pending')}>
+          Pendentes{pendingCount > 0 ? ` (${pendingCount})` : ''}
+        </button>
+      </div>
+
+      <div className="relative mb-3">
+        <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+        <input
+          className="input pl-10"
+          placeholder="Pesquisar por nome ou telefone…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
       {members.isLoading ? (
         <Spinner />
-      ) : (members.data?.length ?? 0) === 0 ? (
-        <EmptyState icon="👥" text="Sem membros. Adiciona o primeiro." />
+      ) : list.length === 0 ? (
+        <EmptyState
+          icon={<Users size={22} />}
+          text={tab === 'pending' ? 'Sem membros pendentes.' : 'Ainda sem membros. Eles registam-se na app.'}
+        />
       ) : (
         <div className="space-y-2">
-          {members.data!.map((m) => (
+          {list.map((m) => (
             <Link key={m.id} to={`/membros/${m.id}`}>
               <Card className="flex items-center gap-3 py-3">
-                <Avatar name={m.full_name} url={m.photo} size={44} />
+                <Avatar name={m.full_name} url={m.photo} size={46} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{m.full_name}</p>
-                  <p className="truncate text-xs text-slate-500">
-                    {m.phone || 'Sem telefone'}
-                  </p>
+                  <MemberMeta p={m} />
                 </div>
-                {m.status === 'suspended' ? (
-                  <span className="badge bg-slate-200 text-slate-600 dark:bg-slate-700">
-                    Suspenso
-                  </span>
-                ) : (
-                  <MembershipBadge state={membershipStateOf(m.valid_until)} />
-                )}
+                <StatusPill profile={m} />
+                <ChevronRight size={18} className="text-slate-600" />
               </Card>
             </Link>
           ))}
         </div>
       )}
-
-      {adding && <AddMemberModal onClose={() => setAdding(false)} />}
     </>
-  )
-}
-
-function AddMemberModal({ onClose }: { onClose: () => void }) {
-  const { addMember } = useActions()
-  const [fullName, setFullName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [photo, setPhoto] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setPhoto(await fileToResizedDataUrl(file))
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!fullName.trim()) return
-    setBusy(true)
-    await addMember({ full_name: fullName, phone, photo })
-    setBusy(false)
-    onClose()
-  }
-
-  return (
-    <Modal onClose={onClose}>
-      <form onSubmit={submit} className="space-y-4">
-        <h2 className="text-lg font-bold">Adicionar membro</h2>
-
-        <div className="flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="relative"
-          >
-            <Avatar name={fullName || '?'} url={photo} size={84} />
-            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand text-sm text-white">
-              📷
-            </span>
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            className="hidden"
-            onChange={onPickPhoto}
-          />
-          <span className="text-xs text-slate-400">Toca para adicionar foto</span>
-        </div>
-
-        <div>
-          <label className="label">Nome completo</label>
-          <input
-            className="input"
-            required
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-        </div>
-        <div>
-          <label className="label">Telefone (opcional)</label>
-          <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-
-        <div className="flex gap-2">
-          <button type="button" className="btn-ghost flex-1" onClick={onClose}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn-primary flex-1" disabled={busy}>
-            {busy ? 'A criar…' : 'Criar'}
-          </button>
-        </div>
-      </form>
-    </Modal>
   )
 }

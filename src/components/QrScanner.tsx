@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { BrowserQRCodeReader } from '@zxing/browser'
+import { CameraOff } from 'lucide-react'
 
-/**
- * Lê QR da câmara e chama onResult(texto) uma vez por leitura.
- * Ignora leituras repetidas durante `cooldownMs` para evitar duplicados.
- */
+/** Lê QR da câmara e chama onResult(texto), ignorando repetições em `cooldownMs`. */
 export function QrScanner({
   onResult,
   cooldownMs = 2500,
@@ -20,7 +18,6 @@ export function QrScanner({
     const reader = new BrowserQRCodeReader()
     let controls: { stop: () => void } | null = null
     let cancelled = false
-
     reader
       .decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
         if (!result) return
@@ -30,14 +27,8 @@ export function QrScanner({
         lastRef.current = { text, at: now }
         onResult(text)
       })
-      .then((c) => {
-        if (cancelled) c.stop()
-        else controls = c
-      })
-      .catch(() => {
-        setError('Não foi possível aceder à câmara. Verifica as permissões.')
-      })
-
+      .then((c) => (cancelled ? c.stop() : (controls = c)))
+      .catch(() => setError('Não foi possível aceder à câmara. Verifica as permissões.'))
     return () => {
       cancelled = true
       controls?.stop()
@@ -45,14 +36,14 @@ export function QrScanner({
   }, [onResult, cooldownMs])
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-black">
+    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black">
       <video ref={videoRef} className="aspect-square w-full object-cover" muted playsInline />
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-48 w-48 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+        <div className="h-52 w-52 rounded-3xl border-2 border-lime/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]" />
       </div>
       {error && (
-        <div className="absolute inset-x-0 bottom-0 bg-rose-600 p-2 text-center text-xs text-white">
-          {error}
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-rose-600 p-2.5 text-center text-xs font-medium text-white">
+          <CameraOff size={14} /> {error}
         </div>
       )}
     </div>
