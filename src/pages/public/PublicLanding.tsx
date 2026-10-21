@@ -167,7 +167,11 @@ export default function PublicLanding() {
         <div className="mx-auto max-w-6xl px-4">
           <p className="display mb-4 text-xs tracking-[0.25em] text-brand">— O teu treino</p>
           <h2 className="display text-4xl sm:text-5xl">Treina com propósito</h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <img src={IMAGES.training} alt="Velocidade" className="h-64 w-full rounded-3xl border border-white/10 object-cover sm:h-80" />
+            <img src={IMAGES.run} alt="Explosão" className="h-64 w-full rounded-3xl border border-white/10 object-cover sm:h-80" />
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {[
               { icon: Dumbbell, t: 'Força & Hipertrofia', d: 'Equipamento profissional e planos para ganhares massa e potência.' },
               { icon: Activity, t: 'Cardio & Resistência', d: 'Melhora o fôlego e a condição física com sessões guiadas.' },
