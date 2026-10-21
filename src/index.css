@@ -16,8 +16,8 @@ body {
   margin: 0;
   background: #070a12;
   background-image:
-    radial-gradient(60% 50% at 50% -10%, rgba(109, 94, 252, 0.18), transparent 70%),
-    radial-gradient(40% 30% at 100% 0%, rgba(182, 245, 0, 0.08), transparent 60%);
+    radial-gradient(60% 50% at 50% -10%, rgba(226, 255, 0, 0.1), transparent 70%),
+    radial-gradient(40% 30% at 100% 0%, rgba(226, 255, 0, 0.06), transparent 60%);
   background-attachment: fixed;
   color: #e7ebf3;
   -webkit-font-smoothing: antialiased;
@@ -36,7 +36,7 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand text-white shadow-glow hover:bg-brand-600;
+    @apply btn bg-brand text-ink-950 shadow-glow hover:bg-brand-600;
   }
   .btn-lime {
     @apply btn bg-lime text-ink-950 hover:bg-lime-400;
@@ -55,6 +55,10 @@ body {
   }
   .muted {
     @apply text-slate-400;
+  }
+  .display {
+    font-family: 'Oswald', Inter, system-ui, sans-serif;
+    @apply font-semibold uppercase tracking-tight;
   }
 }
 

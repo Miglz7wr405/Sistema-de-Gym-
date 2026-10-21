@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Camera, UserPlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { fileToResizedDataUrl } from '@/lib/image'
 import { Avatar } from '@/components/ui'
 import { Logo } from '@/components/Logo'
 
-export default function SignUp({ onBack }: { onBack: () => void }) {
+export default function SignUp() {
+  const navigate = useNavigate()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -72,7 +74,7 @@ export default function SignUp({ onBack }: { onBack: () => void }) {
           </div>
           <h2 className="text-lg font-bold">Conta criada</h2>
           <p className="mt-2 text-sm text-slate-400">{done}</p>
-          <button className="btn-primary mt-5 w-full" onClick={onBack}>
+          <button className="btn-primary mt-5 w-full" onClick={() => navigate('/entrar')}>
             Ir para o login
           </button>
         </div>
@@ -82,8 +84,8 @@ export default function SignUp({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="mx-auto min-h-screen max-w-sm px-5 py-8">
-      <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-sm text-slate-400">
-        <ArrowLeft size={16} /> Voltar
+      <button onClick={() => navigate('/')} className="mb-4 flex items-center gap-1.5 text-sm text-slate-400">
+        <ArrowLeft size={16} /> Voltar ao site
       </button>
       <Logo size={150} className="mb-4" />
       <h1 className="text-2xl font-bold">Criar conta de membro</h1>

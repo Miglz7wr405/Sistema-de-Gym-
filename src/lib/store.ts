@@ -6,6 +6,9 @@ import {
   type CheckinResponse,
   type ClassEnrollment,
   type GymClass,
+  type GymEvent,
+  type Instructor,
+  type Notice,
   type Payment,
   type Plan,
   type Profile,
@@ -178,6 +181,48 @@ export function useMyEnrollments(memberId: string | undefined) {
   })
 }
 
+// --------------------------------------------------------------- Instrutores / Eventos / Avisos
+export function useInstructors() {
+  return useQuery({
+    queryKey: ['instructors'],
+    queryFn: async (): Promise<Instructor[]> => {
+      const { data, error } = await supabase.from('instructors').select('*').order('name')
+      if (error) throw error
+      return (data ?? []) as Instructor[]
+    },
+  })
+}
+
+export function useEvents(upcomingOnly = true) {
+  return useQuery({
+    queryKey: ['events', upcomingOnly],
+    queryFn: async (): Promise<GymEvent[]> => {
+      let q = supabase.from('events').select('*').order('starts_at')
+      if (upcomingOnly) {
+        q = q.eq('active', true).gte('starts_at', new Date(Date.now() - 2 * 3600_000).toISOString())
+      }
+      const { data, error } = await q
+      if (error) throw error
+      return (data ?? []) as GymEvent[]
+    },
+  })
+}
+
+export function useNotices(limit = 50) {
+  return useQuery({
+    queryKey: ['notices', limit],
+    queryFn: async (): Promise<Notice[]> => {
+      const { data, error } = await supabase
+        .from('notices')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (error) throw error
+      return (data ?? []) as Notice[]
+    },
+  })
+}
+
 // --------------------------------------------------------------- Check-in
 async function registerCheckin(member: Profile): Promise<CheckinResponse> {
   const state = membershipStateOf(member.valid_until)
@@ -320,6 +365,42 @@ export function useActions() {
         .delete()
         .eq('class_id', classId)
         .eq('member_id', memberId)
+      invalidate()
+    },
+
+    async addInstructor(data: { name: string; specialty?: string; phone?: string }): Promise<void> {
+      await supabase.from('instructors').insert({
+        name: data.name.trim(),
+        specialty: data.specialty?.trim() || null,
+        phone: data.phone?.trim() || null,
+      })
+      invalidate()
+    },
+    async deleteInstructor(id: string): Promise<void> {
+      await supabase.from('instructors').delete().eq('id', id)
+      invalidate()
+    },
+
+    async addEvent(data: { title: string; description?: string; starts_at: string; location?: string }): Promise<void> {
+      await supabase.from('events').insert({
+        title: data.title.trim(),
+        description: data.description?.trim() || null,
+        starts_at: data.starts_at,
+        location: data.location?.trim() || null,
+      })
+      invalidate()
+    },
+    async deleteEvent(id: string): Promise<void> {
+      await supabase.from('events').update({ active: false }).eq('id', id)
+      invalidate()
+    },
+
+    async addNotice(data: { title: string; body: string }): Promise<void> {
+      await supabase.from('notices').insert({ title: data.title.trim(), body: data.body.trim() })
+      invalidate()
+    },
+    async deleteNotice(id: string): Promise<void> {
+      await supabase.from('notices').delete().eq('id', id)
       invalidate()
     },
 

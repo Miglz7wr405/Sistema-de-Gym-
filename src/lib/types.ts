@@ -67,6 +67,33 @@ export interface ClassEnrollment {
   created_at: string
 }
 
+export interface Instructor {
+  id: string
+  name: string
+  specialty: string | null
+  phone: string | null
+  photo: string | null
+  active: boolean
+  created_at: string
+}
+
+export interface GymEvent {
+  id: string
+  title: string
+  description: string | null
+  starts_at: string
+  location: string | null
+  active: boolean
+  created_at: string
+}
+
+export interface Notice {
+  id: string
+  title: string
+  body: string
+  created_at: string
+}
+
 export interface CheckinResponse {
   result: CheckinResult
   member?: Profile

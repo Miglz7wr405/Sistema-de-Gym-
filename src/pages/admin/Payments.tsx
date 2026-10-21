@@ -33,7 +33,7 @@ export default function AdminPayments() {
 
   return (
     <>
-      <PageHeader title="Pagamentos" />
+      <PageHeader title="Mensalidades" subtitle="Pagamentos e validade dos membros" />
       <div className="mb-4 flex gap-2">
         <button className={tab === 'pending' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('pending')}>
           A tratar

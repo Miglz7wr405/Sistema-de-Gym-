@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import { QrCode, Clock, Flame, CalendarCheck, Hourglass, ClipboardList, ChevronRight } from 'lucide-react'
+import { QrCode, Clock, Flame, CalendarCheck, Hourglass, ClipboardList, ChevronRight, Trophy, Bell } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useAttendances } from '@/lib/store'
-import { Avatar, Card, StatusPill } from '@/components/ui'
+import { Avatar, Card } from '@/components/ui'
 import { Logo } from '@/components/Logo'
 import { dateLabel, fromNow, quoteOfTheDay } from '@/lib/format'
 import { daysLeft, membershipStateOf } from '@/lib/types'
@@ -73,23 +73,23 @@ export default function MemberHome() {
         className="relative mb-4 block overflow-hidden rounded-3xl border border-white/10 bg-brand-grad p-5 shadow-glow"
       >
         <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <div className="relative">
+        <div className="relative text-ink-950">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-widest text-white/80">
-              Cartão de Membro
+            <span className="display text-xs tracking-widest text-ink-950/70">Cartão de Membro</span>
+            <span className="rounded-full bg-ink-950/15 px-3 py-1 text-xs font-bold text-ink-950">
+              {profile.status === 'pending' ? 'Pendente' : isActive ? 'Ativo' : 'Expirado'}
             </span>
-            <StatusPill profile={profile} />
           </div>
-          <p className="mt-6 text-2xl font-bold text-white">{profile.full_name}</p>
+          <p className="display mt-6 text-3xl text-ink-950">{profile.full_name}</p>
           <div className="mt-4 flex items-end justify-between">
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-white/70">Válido até</p>
-              <p className="text-lg font-semibold text-white">{dateLabel(profile.valid_until)}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-950/60">Válido até</p>
+              <p className="text-lg font-bold text-ink-950">{dateLabel(profile.valid_until)}</p>
             </div>
             {isActive && dl != null && (
               <div className="text-right">
-                <p className="text-3xl font-extrabold leading-none text-white">{dl}</p>
-                <p className="text-[11px] uppercase tracking-wide text-white/70">
+                <p className="display text-4xl leading-none text-ink-950">{dl}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-950/60">
                   {dl === 1 ? 'dia' : 'dias'}
                 </p>
               </div>
@@ -124,11 +124,26 @@ export default function MemberHome() {
             <p className="font-semibold">O meu QR Code</p>
             <p className="text-xs text-slate-400">Mostra à entrada do ginásio</p>
           </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand/15 text-brand-400">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand/15 text-brand">
             <QrCode size={22} />
           </div>
         </Card>
       </Link>
+
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <Link to="/eventos">
+          <Card className="flex items-center gap-3">
+            <Trophy size={20} className="text-brand" />
+            <span className="font-semibold">Eventos</span>
+          </Card>
+        </Link>
+        <Link to="/avisos">
+          <Card className="flex items-center gap-3">
+            <Bell size={20} className="text-brand" />
+            <span className="font-semibold">Avisos</span>
+          </Card>
+        </Link>
+      </div>
     </>
   )
 }

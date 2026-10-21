@@ -6,19 +6,20 @@ export default {
     extend: {
       colors: {
         ink: {
-          950: '#070a12',
-          900: '#0b0f1a',
-          850: '#0f1524',
-          800: '#141b2e',
-          700: '#1d2740',
-          600: '#2a3552',
+          950: '#050507',
+          900: '#0a0a0d',
+          850: '#101014',
+          800: '#16161c',
+          700: '#20202a',
+          600: '#2c2c3a',
         },
+        // Acento amarelo Olympus
         brand: {
-          DEFAULT: '#6d5efc',
-          400: '#8b7dff',
-          500: '#6d5efc',
-          600: '#5a46f0',
-          700: '#4a39d6',
+          DEFAULT: '#e2ff00',
+          400: '#eaff4d',
+          500: '#e2ff00',
+          600: '#c8e600',
+          700: '#a8c000',
         },
         lime: {
           DEFAULT: '#b6f500',
@@ -27,14 +28,15 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Oswald', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 10px 30px -12px rgba(0,0,0,0.6)',
-        glow: '0 10px 40px -10px rgba(109,94,252,0.55)',
+        card: '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 12px 34px -14px rgba(0,0,0,0.75)',
+        glow: '0 10px 40px -10px rgba(226,255,0,0.45)',
       },
       backgroundImage: {
-        'brand-grad': 'linear-gradient(135deg,#6d5efc 0%,#8b7dff 50%,#b6f500 160%)',
-        'card-grad': 'linear-gradient(160deg,rgba(109,94,252,0.14),rgba(255,255,255,0) 60%)',
+        'brand-grad': 'linear-gradient(135deg,#e2ff00 0%,#c8e600 55%,#8aa300 140%)',
+        'card-grad': 'linear-gradient(160deg,rgba(226,255,0,0.10),rgba(255,255,255,0) 60%)',
       },
       borderRadius: {
         '2xl': '1.1rem',
