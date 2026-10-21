@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { usePlans } from '@/lib/store'
 import { Logo } from '@/components/Logo'
-import { SITE } from '@/lib/site'
+import { SITE, IMAGES } from '@/lib/site'
 import { mzn } from '@/lib/format'
 
 const NAV = [
@@ -31,6 +31,8 @@ export default function PublicLanding() {
   const navigate = useNavigate()
   const plans = usePlans(true)
   const [menu, setMenu] = useState(false)
+  const [heroOk, setHeroOk] = useState(true)
+  const [aboutOk, setAboutOk] = useState(true)
 
   function go(id: string) {
     setMenu(false)
@@ -86,11 +88,26 @@ export default function PublicLanding() {
       {/* HERO */}
       <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden px-4 pt-16">
         <div className="absolute inset-0 -z-10 bg-ink-950" />
+        {heroOk && (
+          <img
+            src={IMAGES.hero}
+            alt=""
+            onError={() => setHeroOk(false)}
+            className="absolute inset-0 -z-10 h-full w-full object-cover opacity-45"
+          />
+        )}
         <div
-          className="absolute inset-0 -z-10 opacity-70"
+          className="absolute inset-0 -z-10"
           style={{
             backgroundImage:
-              'radial-gradient(70% 60% at 80% -10%, rgba(226,255,0,0.18), transparent 60%), radial-gradient(50% 50% at 0% 100%, rgba(226,255,0,0.08), transparent 60%)',
+              'linear-gradient(90deg, rgba(5,5,7,0.96) 0%, rgba(5,5,7,0.7) 45%, rgba(5,5,7,0.35) 100%), linear-gradient(0deg, rgba(5,5,7,0.95), transparent 55%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 -z-10 opacity-60"
+          style={{
+            backgroundImage:
+              'radial-gradient(70% 60% at 85% -10%, rgba(226,255,0,0.16), transparent 60%)',
           }}
         />
         <div className="mx-auto w-full max-w-6xl py-20">
@@ -123,6 +140,14 @@ export default function PublicLanding() {
         <h2 className="display max-w-3xl text-4xl leading-tight sm:text-5xl">
           Não é um ginásio. É uma <span className="text-brand">arena.</span>
         </h2>
+        {aboutOk && (
+          <img
+            src={IMAGES.about}
+            alt="Treino no Olympus"
+            onError={() => setAboutOk(false)}
+            className="mt-8 h-56 w-full rounded-3xl border border-white/10 object-cover sm:h-72"
+          />
+        )}
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           <p className="text-slate-300">{SITE.aboutText}</p>
           <p className="text-slate-300">{SITE.aboutText2}</p>

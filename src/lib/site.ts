@@ -1,3 +1,10 @@
+/** Imagens do site (banco gratuito Unsplash). Se alguma falhar, há fallback. */
+export const IMAGES = {
+  hero: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1400&q=80',
+  about: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1400&q=80',
+  training: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1400&q=80',
+}
+
 /** Conteúdo do website público Olympus (editável aqui). */
 export const SITE = {
   name: 'Olympus Gym',
