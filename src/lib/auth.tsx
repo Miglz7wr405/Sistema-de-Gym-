@@ -16,6 +16,8 @@ interface AuthState {
   loading: boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  /** Injecta sessao+perfil ja carregados (apos login) — evita 2.o round-trip. */
+  setSessionAndProfile: (session: Session, profile: Profile | null) => void
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined)
@@ -38,9 +40,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.session) setProfile(await fetchProfile(data.session.user.id))
       setLoading(false)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
-      setSession(s)
-      setProfile(s ? await fetchProfile(s.user.id) : null)
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      setSession(newSession)
+      // So vai buscar o perfil quando ainda nao foi carregado (SIGNED_IN inicial).
+      // Em TOKEN_REFRESHED/USER_UPDATED mantem o perfil atual — evita round-trip extra.
+      if (!newSession) {
+        setProfile(null)
+      } else if (event === 'SIGNED_IN') {
+        setProfile((cur) => cur ?? null)
+        const p = await fetchProfile(newSession.user.id)
+        setProfile(p)
+      }
     })
     return () => {
       active = false
@@ -59,6 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       refreshProfile: async () => {
         if (session) setProfile(await fetchProfile(session.user.id))
+      },
+      setSessionAndProfile: (s2, p2) => {
+        setSession(s2)
+        setProfile(p2)
       },
     }),
     [session, profile, loading],

@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogIn, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
+import type { Profile } from '@/lib/types'
 import { Logo } from '@/components/Logo'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { setSessionAndProfile } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -16,8 +19,19 @@ export default function Login() {
     e.preventDefault()
     setBusy(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-    if (error) setError('Email ou palavra-passe incorretos.')
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    if (error || !data.session) {
+      setError('Email ou palavra-passe incorretos.')
+      setBusy(false)
+      return
+    }
+    // Vai buscar o perfil IMEDIATAMENTE para o painel abrir sem spinner intermedio.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.session.user.id)
+      .maybeSingle()
+    setSessionAndProfile(data.session, (profile ?? null) as Profile | null)
     setBusy(false)
   }
 
