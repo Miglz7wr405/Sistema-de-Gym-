@@ -273,6 +273,16 @@ export function useActions() {
       invalidate()
     },
 
+    /** Apaga o membro e todos os seus registos (admin). */
+    async deleteMember(id: string): Promise<void> {
+      await supabase.from('member_attendances').delete().eq('member_id', id)
+      await supabase.from('member_payments').delete().eq('member_id', id)
+      await supabase.from('class_enrollments').delete().eq('member_id', id)
+      const { error } = await supabase.from('profiles').delete().eq('id', id)
+      if (error) throw error
+      invalidate()
+    },
+
     async setStatus(id: string, status: Profile['status']): Promise<void> {
       const { error } = await supabase.from('profiles').update({ status }).eq('id', id)
       if (error) throw error

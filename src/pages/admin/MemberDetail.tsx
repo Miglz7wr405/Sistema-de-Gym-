@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
 import {
   CreditCard,
@@ -12,6 +12,7 @@ import {
   User2,
   Receipt,
   DoorOpen,
+  Trash2,
 } from 'lucide-react'
 import { PageHeader } from '@/components/AppShell'
 import { Avatar, Card, EmptyState, SectionTitle, Spinner, StatusPill } from '@/components/ui'
@@ -23,6 +24,7 @@ import { ageFrom, type Plan } from '@/lib/types'
 
 export default function AdminMemberDetail() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const member = useMember(id)
   const payments = usePayments(id)
   const attendances = useAttendances(id, 10)
@@ -92,6 +94,17 @@ export default function AdminMemberDetail() {
       >
         {m.status === 'suspended' ? <CheckCircle2 size={18} /> : <Ban size={18} />}
         {m.status === 'suspended' ? 'Reativar membro' : 'Suspender membro'}
+      </button>
+
+      <button
+        className="btn-ghost mb-5 w-full text-rose-400"
+        onClick={async () => {
+          if (!window.confirm(`Apagar definitivamente ${m.full_name} e todos os seus registos?`)) return
+          await actions.deleteMember(id)
+          navigate('/membros')
+        }}
+      >
+        <Trash2 size={18} /> Apagar membro
       </button>
 
       <SectionTitle>Pagamentos</SectionTitle>

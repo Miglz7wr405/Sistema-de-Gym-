@@ -51,11 +51,7 @@ export default function App() {
   }
 
   if (!profile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner />
-      </div>
-    )
+    return <NoProfile />
   }
 
   if (profile.role === 'admin') {
@@ -94,5 +90,21 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>
+  )
+}
+
+/** Sessao valida mas sem perfil (ex.: conta removida) — evita ecra preso. */
+function NoProfile() {
+  const { signOut } = useAuth()
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+      <Spinner />
+      <p className="text-sm text-slate-400">
+        A carregar a tua conta… Se demorar, termina sessao e entra outra vez.
+      </p>
+      <button className="btn-ghost" onClick={signOut}>
+        Terminar sessao
+      </button>
+    </div>
   )
 }
