@@ -241,11 +241,21 @@ async function registerCheckin(member: Profile): Promise<CheckinResponse> {
     result = 'expired'
     message = 'Mensalidade expirada'
   }
-  await supabase.from('member_attendances').insert({
+  const { error: attErr } = await supabase.from('member_attendances').insert({
     member_id: member.id,
     member_name: member.full_name,
     result,
   })
+  if (attErr) {
+    // eslint-disable-next-line no-console
+    console.error('[check-in] falha ao registar presenca:', attErr.message)
+    return {
+      result,
+      member,
+      state,
+      message: result === 'granted' ? 'Autorizado (falha ao gravar presenca)' : message,
+    }
+  }
   return { result, member, state, message }
 }
 

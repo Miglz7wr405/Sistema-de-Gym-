@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { ScanLine, Search, CheckCircle2, XCircle, HelpCircle } from 'lucide-react'
 import { PageHeader } from '@/components/AppShell'
 import { Avatar, Card, Spinner, StatusPill } from '@/components/ui'
@@ -15,14 +15,21 @@ export default function AdminAttendance() {
   const [busy, setBusy] = useState(false)
   const actions = useActions()
 
-  const handleToken = useCallback(
-    async (text: string) => {
-      setBusy(true)
-      setResult(await actions.verifyToken(text))
+  const actionsRef = useRef(actions)
+  actionsRef.current = actions
+  const lockRef = useRef(false)
+
+  // Ignora novas leituras enquanto uma esta a ser processada / mostrada.
+  const handleToken = useCallback(async (text: string) => {
+    if (lockRef.current) return
+    lockRef.current = true
+    setBusy(true)
+    try {
+      setResult(await actionsRef.current.verifyToken(text))
+    } finally {
       setBusy(false)
-    },
-    [actions],
-  )
+    }
+  }, [])
 
   return (
     <>
@@ -50,7 +57,15 @@ export default function AdminAttendance() {
       )}
 
       {busy && <Spinner />}
-      {result && <ResultSheet result={result} onClose={() => setResult(null)} />}
+      {result && (
+        <ResultSheet
+          result={result}
+          onClose={() => {
+            setResult(null)
+            lockRef.current = false
+          }}
+        />
+      )}
     </>
   )
 }
