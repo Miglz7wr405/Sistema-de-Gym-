@@ -4,6 +4,7 @@ import { Search, Users, ChevronRight } from 'lucide-react'
 import { PageHeader } from '@/components/AppShell'
 import { Avatar, Card, EmptyState, MemberMeta, Spinner, StatusPill } from '@/components/ui'
 import { useMembers } from '@/lib/store'
+import { membershipStateOf } from '@/lib/types'
 
 type Tab = 'all' | 'pending' | 'active'
 
@@ -14,12 +15,24 @@ export default function AdminMembers() {
 
   const list = useMemo(() => {
     const all = members.data ?? []
-    if (tab === 'pending') return all.filter((m) => m.status === 'pending')
+    if (tab === 'pending') {
+      return all.filter((m) => {
+        if (m.status === 'pending') return true
+        if (m.status === 'suspended') return false
+        const st = membershipStateOf(m.valid_until)
+        return st === 'expired' || st === 'none'
+      })
+    }
     if (tab === 'active') return all.filter((m) => m.status === 'active')
     return all
   }, [members.data, tab])
 
-  const pendingCount = (members.data ?? []).filter((m) => m.status === 'pending').length
+  const pendingCount = (members.data ?? []).filter((m) => {
+    if (m.status === 'pending') return true
+    if (m.status === 'suspended') return false
+    const st = membershipStateOf(m.valid_until)
+    return st === 'expired' || st === 'none'
+  }).length
 
   return (
     <>
@@ -30,7 +43,7 @@ export default function AdminMembers() {
           Todos
         </button>
         <button className={tab === 'pending' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('pending')}>
-          Pendentes{pendingCount > 0 ? ` (${pendingCount})` : ''}
+          A tratar{pendingCount > 0 ? ` (${pendingCount})` : ''}
         </button>
         <button className={tab === 'active' ? 'btn-primary flex-1' : 'btn-ghost flex-1'} onClick={() => setTab('active')}>
           Ativos
@@ -52,7 +65,7 @@ export default function AdminMembers() {
       ) : list.length === 0 ? (
         <EmptyState
           icon={<Users size={22} />}
-          text={tab === 'pending' ? 'Sem membros pendentes.' : 'Ainda sem membros. Eles registam-se na app.'}
+          text={tab === 'pending' ? 'Sem membros a tratar.' : 'Ainda sem membros. Eles registam-se na app.'}
         />
       ) : (
         <div className="space-y-2">
