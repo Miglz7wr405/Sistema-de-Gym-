@@ -66,8 +66,11 @@ export default function MemberQR() {
             <div className="text-center">
               <StatusPill profile={profile} />
               <p className="mt-3 max-w-xs text-sm text-slate-400">{reason}</p>
-              {(profile.status === 'pending' && !profile.plan_id) ||
-              (profile.status === 'active' && state === 'expired') ? (
+              {profile.status === 'active' && state === 'expired' ? (
+                <Link to="/inscricao" className="btn-primary mt-4 inline-flex">
+                  🔄 Renovar mensalidade
+                </Link>
+              ) : profile.status === 'pending' && !profile.plan_id ? (
                 <Link to="/inscricao" className="btn-primary mt-4 inline-flex">
                   Fazer inscrição
                 </Link>

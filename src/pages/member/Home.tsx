@@ -24,9 +24,10 @@ export default function MemberHome() {
   }).length
   const last = (attendances.data ?? []).find((a) => a.result === 'granted')
 
-  const needsInscription =
-    (profile.status === 'pending' && !profile.plan_id) ||
-    (profile.status === 'active' && state === 'expired')
+  const isFirstTime = profile.status === 'pending' && !profile.plan_id
+  const isExpired = profile.status === 'active' && state === 'expired'
+  const isExpiringSoon = profile.status === 'active' && state === 'expiring'
+  const needsInscription = isFirstTime || isExpired
   const waitingConfirm = profile.status === 'pending' && !!profile.plan_id
 
   return (
@@ -44,15 +45,45 @@ export default function MemberHome() {
 
       {needsInscription && (
         <Link to="/inscricao">
-          <Card className="mb-4 flex items-center gap-3 border-brand/30 bg-brand/10">
-            <ClipboardList className="shrink-0 text-brand-400" size={22} />
+          <Card
+            className={`mb-4 flex items-center gap-3 ${
+              isExpired
+                ? 'border-rose-500/40 bg-rose-500/15 shadow-glow'
+                : 'border-brand/30 bg-brand/10'
+            }`}
+          >
+            <ClipboardList
+              className={isExpired ? 'shrink-0 text-rose-300' : 'shrink-0 text-brand-400'}
+              size={22}
+            />
             <div className="flex-1">
-              <p className="font-semibold">Fazer inscrição</p>
+              <p className="font-bold">
+                {isExpired ? '🔴 Mensalidade expirada — Renovar agora' : 'Fazer inscrição'}
+              </p>
               <p className="text-xs text-slate-300">
-                Escolhe o teu plano para ativares o acesso ao ginásio.
+                {isExpired
+                  ? 'Escolhe um plano para renovar e reativar o teu QR Code.'
+                  : 'Escolhe o teu plano para ativares o acesso ao ginásio.'}
               </p>
             </div>
             <ChevronRight className="text-slate-500" size={18} />
+          </Card>
+        </Link>
+      )}
+
+      {isExpiringSoon && (
+        <Link to="/inscricao">
+          <Card className="mb-4 flex items-center gap-3 border-amber-500/40 bg-amber-500/15">
+            <Hourglass className="shrink-0 text-amber-300" size={22} />
+            <div className="flex-1">
+              <p className="font-bold text-amber-100">
+                ⚠️ A tua mensalidade está prestes a expirar
+              </p>
+              <p className="text-xs text-amber-100/80">
+                Renova já para não perder o acesso ao ginásio.
+              </p>
+            </div>
+            <ChevronRight className="text-amber-200" size={18} />
           </Card>
         </Link>
       )}

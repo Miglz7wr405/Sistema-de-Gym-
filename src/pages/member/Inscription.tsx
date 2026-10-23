@@ -9,6 +9,7 @@ import { mzn } from '@/lib/format'
 
 export default function MemberInscription() {
   const { profile, refreshProfile } = useAuth()
+  const isRenewal = !!profile?.plan_id
   const plans = usePlans(true)
   const { requestPlan } = useActions()
   const navigate = useNavigate()
@@ -31,7 +32,7 @@ export default function MemberInscription() {
         <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-lime/15 text-lime-400">
           <CheckCircle2 size={32} />
         </div>
-        <h2 className="text-xl font-bold">Inscrição enviada!</h2>
+        <h2 className="text-xl font-bold">{isRenewal ? 'Pedido de renovação enviado!' : 'Inscrição enviada!'}</h2>
         <p className="mt-2 max-w-xs text-sm text-slate-400">
           Entrega o valor ao ginásio. Assim que o pagamento for confirmado, a tua conta fica
           ativa e o teu QR Code aparece.
@@ -45,13 +46,14 @@ export default function MemberInscription() {
 
   return (
     <>
-      <PageHeader title="Fazer inscrição" subtitle="Escolhe o teu plano" />
+      <PageHeader title={isRenewal ? "Renovar mensalidade" : "Fazer inscrição"} subtitle="Escolhe o teu plano" />
 
       <Card className="mb-4 flex items-start gap-3 border-brand/20 bg-brand/10 py-3">
         <Info size={18} className="mt-0.5 shrink-0 text-brand-400" />
         <p className="text-xs text-slate-300">
-          Escolhe um plano e confirma. A tua conta fica <b>pendente</b> até entregares o
-          pagamento e o ginásio confirmar.
+          {isRenewal
+            ? <>Escolhe o teu novo plano e confirma. Entrega o pagamento ao ginásio — assim que confirmarem, o teu QR Code volta a ficar ativo.</>
+            : <>Escolhe um plano e confirma. A tua conta fica <b>pendente</b> até entregares o pagamento e o ginásio confirmar.</>}
         </p>
       </Card>
 
@@ -78,7 +80,7 @@ export default function MemberInscription() {
       )}
 
       <button className="btn-primary mt-5 w-full" disabled={!selectedId || busy} onClick={submit}>
-        {busy ? 'A enviar…' : 'Confirmar inscrição'}
+        {busy ? 'A enviar…' : isRenewal ? 'Confirmar renovação' : 'Confirmar inscrição'}
       </button>
     </>
   )

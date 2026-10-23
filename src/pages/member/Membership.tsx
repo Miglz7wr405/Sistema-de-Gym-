@@ -14,9 +14,10 @@ export default function MemberMembership() {
   if (!profile) return null
 
   const state = membershipStateOf(profile.valid_until)
-  const needsInscription =
-    (profile.status === 'pending' && !profile.plan_id) ||
-    (profile.status === 'active' && state === 'expired')
+  const isExpired = profile.status === 'active' && state === 'expired'
+  const isExpiringSoon = profile.status === 'active' && state === 'expiring'
+  const isFirstTime = profile.status === 'pending' && !profile.plan_id
+  const needsInscription = isFirstTime || isExpired
 
   return (
     <>
@@ -24,11 +25,39 @@ export default function MemberMembership() {
 
       {needsInscription && (
         <Link to="/inscricao">
-          <Card className="mb-4 flex items-center gap-3 border-brand/30 bg-brand/10">
-            <ClipboardList className="shrink-0 text-brand-400" size={22} />
+          <Card
+            className={`mb-4 flex items-center gap-3 ${
+              isExpired
+                ? 'border-rose-500/40 bg-rose-500/15 shadow-glow'
+                : 'border-brand/30 bg-brand/10'
+            }`}
+          >
+            <ClipboardList
+              className={isExpired ? 'shrink-0 text-rose-300' : 'shrink-0 text-brand-400'}
+              size={22}
+            />
             <div className="flex-1">
-              <p className="font-semibold">Fazer inscrição</p>
-              <p className="text-xs text-slate-300">Escolhe o teu plano para ativares o acesso.</p>
+              <p className="font-bold">
+                {isExpired ? '🔴 Mensalidade expirada — Renovar agora' : 'Fazer inscrição'}
+              </p>
+              <p className="text-xs text-slate-300">
+                {isExpired
+                  ? 'Escolhe um plano para renovar e reativar o teu QR Code.'
+                  : 'Escolhe o teu plano para ativares o acesso.'}
+              </p>
+            </div>
+          </Card>
+        </Link>
+      )}
+      {isExpiringSoon && (
+        <Link to="/inscricao">
+          <Card className="mb-4 flex items-center gap-3 border-amber-500/40 bg-amber-500/15">
+            <ClipboardList className="shrink-0 text-amber-300" size={22} />
+            <div className="flex-1">
+              <p className="font-bold text-amber-100">
+                ⚠️ A tua mensalidade está prestes a expirar
+              </p>
+              <p className="text-xs text-amber-100/80">Renova para manter o acesso.</p>
             </div>
           </Card>
         </Link>
